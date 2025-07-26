@@ -36,13 +36,14 @@ export LANGSMITH_API_KEY="..."
 
 ### Install the Cmponents
 #### Install the Chat model to be used
-1. We are using prepelxity here so we will be install in the Google Gemini langchain package
+1. We use the chat model to give the Context Message from the Vector DB and the User Message and get back a proper human readable Natural Language Response.
+2. In this Project we are using the Mistral AI Embedding model.
 
 ```bash
-pip install -qU "langchain[google-genai]"
+pip install -qU "langchain[mistralai]"
 ```
 #### Install the embedding model
-
+1. The embedding model is used to get the user input and get the relevant document from the Vector Database to process it furth. Based on the Number ort result an appropriate number of document is returned
 ```bash
-pip install -qU langchain-google-genai
+pip install -qU langchain-mistralai
 ```
