@@ -47,3 +47,15 @@ pip install -qU "langchain[mistralai]"
 ```bash
 pip install -qU langchain-mistralai
 ```
+
+#### Install Vector Store
+1. We are Storing the data in a vector store for getting the context to be passed on to the model.
+2. The Markdown data is is converted to chucks and we create the document with these chunks which contains the metadata of these chunks.
+3. In this project we are using an In Memory Vector database Langchain FAISS and the necessary installations are given below
+```bash
+pip install -qU langchain-core
+pip install sentence-transformers
+## Based on the Processor you have install one of the below
+pip install faiss-gpu # If you have any NVidia CUDA Supported gpu
+pip install faiss-cpu # If there is not CUDA Supported GPU
+```
