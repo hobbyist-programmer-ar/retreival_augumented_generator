@@ -14,3 +14,6 @@
 ### Retreival and Generation
 * Retrieve :  Given a user input, relevant splits are retrieved from storage using a [Retriever](https://python.langchain.com/docs/concepts/retrievers/)
 * Generate : A Chat Model/ LLM produces an answer using a prompt that includes both the question with the retrieved data
+
+
+**NOTE : The Entire Project is vibe coded and you can find the prompts to create this in the vc_prompts.md file**
