@@ -10,10 +10,39 @@ which python ## Checks if the venv is activated
 ## O/P for the command will be the ./.ragvenv/bin/python folder.
 ```
 
-## Prepping th PIP
+## Prep th PIP
 * Make sure you are using the latest version of pip to install all the python libraries
 ```bash
 python3 -m pip install --upgrade pip ## Upgrades the PIP version
 python3 -m pip --version ## Check ths installed version of PIP
 ## O/P pip 25.1.1 from ./.ragvenv/lib/python3.13/site-packages/pip
+```
+
+
+### Install all the necessary Packages
+* Now we need to install all the required libraries for this project
+```bash
+pip install --quiet --upgrade langchain-text-splitters langchain-community langgraph
+```
+
+### Getting the Lang Smith Key
+Many of the applications you build with LangChain will contain multiple steps with multiple invocations of LLM calls. As these applications get more complex, it becomes crucial to be able to inspect what exactly is going on inside your chain or agent. The best way to do this is with LangSmith.
+After you sign up at the link above, make sure to set your environment variables, in the bash cource of z shell source which ever is being used in the system ,  to start logging traces
+
+```bash
+export LANGSMITH_TRACING="true"
+export LANGSMITH_API_KEY="..."
+```
+
+### Install the Cmponents
+#### Install the Chat model to be used
+1. We are using prepelxity here so we will be install in the Google Gemini langchain package
+
+```bash
+pip install -qU "langchain[google-genai]"
+```
+#### Install the embedding model
+
+```bash
+pip install -qU langchain-google-genai
 ```

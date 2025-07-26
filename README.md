@@ -14,10 +14,3 @@
 ### Retreival and Generation
 * Retrieve :  Given a user input, relevant splits are retrieved from storage using a [Retriever](https://python.langchain.com/docs/concepts/retrievers/)
 * Generate : A Chat Model/ LLM produces an answer using a prompt that includes both the question with the retrieved data
-
-
-### INstall all the necessary Packages
-* Now we need to install all the required libraries for this project
-```bash
-pip install --quiet --upgrade langchain-text-splitters langchain-community langgraph
-```
