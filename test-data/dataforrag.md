@@ -1,6 +1,7 @@
 
 
-# Welcome to your journey to mastering compression algorithms! It's fantastic that you're open to using Python for this endeavor. While you have strong Java experience, Python's clear syntax and rich ecosystem often make it an ideal language for quickly prototyping and understanding complex algorithms without getting bogged down in boilerplate code. This plan will guide you day-by-day, providing resources and implementation goals to help you build a solid foundation and eventually create your own compression algorithm.
+# Welcome to your journey to mastering compression algorithms! 
+It's fantastic that you're open to using Python for this endeavor. While you have strong Java experience, Python's clear syntax and rich ecosystem often make it an ideal language for quickly prototyping and understanding complex algorithms without getting bogged down in boilerplate code. This plan will guide you day-by-day, providing resources and implementation goals to help you build a solid foundation and eventually create your own compression algorithm.
 
 ## Key Principles for Your Journey
 
