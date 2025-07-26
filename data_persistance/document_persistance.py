@@ -15,8 +15,6 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-# --- Fix for ModuleNotFoundError ---
-# This ensures the script can find the project's modules when run directly.
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
@@ -134,12 +132,6 @@ class VectorStoreManager:
     def build_vector_store_from_dict(self, markdown_data: Dict[str, str]) -> FAISS:
         """
         Creates documents from a markdown dictionary and builds a FAISS vector store.
-
-        Args:
-            markdown_data: A dictionary with filename as key and markdown content as value.
-
-        Returns:
-            A FAISS vector store instance containing the processed documents.
         """
         documents = self._parse_markdown_to_documents(markdown_data)
         if not documents:
@@ -174,30 +166,44 @@ class VectorStoreManager:
             })
         return human_readable_docs
 
+# This block allows the script to be executed directly from the command line.
 if __name__ == '__main__':
+    # --- 1. Setup Command-Line Argument Parser ---
     parser = argparse.ArgumentParser(
         description="Process markdown files from a directory and store them in a FAISS vector DB."
     )
     parser.add_argument(
         '--path',
         type=str,
-        help="The path to the directory containing markdown files.",
-        default=""
+        help="The path to the directory containing markdown files. If not provided, you will be prompted to enter it.",
+        default=None
     )
     args = parser.parse_args()
 
-    # input_path = args.path
-    input_path = "./test-data"
+    input_path = args.path
     is_demo = False
 
+    # --- 2. Prompt for path if not provided via arguments ---
     if not input_path:
-        print("No path provided. Creating a temporary demo directory...")
+        print("No directory path provided via command-line argument.")
+        try:
+            # Prompt the user to enter the path interactively
+            input_path = input("Please enter the path to your markdown directory (or press Enter for a demo): ")
+        except KeyboardInterrupt:
+            print("\nOperation cancelled by user. Exiting.")
+            sys.exit()
+
+    # --- 3. Handle Demo Mode ---
+    # If the user provided no path via argument OR prompt, run the demo.
+    if not input_path:
+        print("\nNo path entered. Creating and running a temporary demo...")
         is_demo = True
         input_path = 'temp_rag_files'
         if os.path.exists(input_path):
             shutil.rmtree(input_path)
         os.makedirs(input_path)
 
+        # Create dummy files for demonstration
         with open(os.path.join(input_path, 'rag_overview.md'), 'w') as f:
             f.write(
                 "# All About RAG\n\nThis document explains the concept of **Retrieval Augmented Generation**.\n\n"
@@ -211,9 +217,10 @@ if __name__ == '__main__':
             )
         print(f"Demo files created in '{input_path}/'")
 
+    # --- 4. Run the Processing ---
     try:
         manager = VectorStoreManager()
-        print(f"\nProcessing files from: {input_path}")
+        print(f"\nProcessing files from: {os.path.abspath(input_path)}")
         manager.process_directory_and_build_store(input_path)
 
         print("\n--- Documents in Vector Store (Cleaned Content) ---")
@@ -224,7 +231,9 @@ if __name__ == '__main__':
 
     except (FileNotFoundError, NotADirectoryError, ValueError) as e:
         print(f"\nAn error occurred: {e}")
+        print("Please ensure the path is a valid directory containing markdown files.")
     finally:
+        # --- 5. Clean up the demo directory ---
         if is_demo and os.path.exists(input_path):
             print(f"\nCleaning up demo directory: {input_path}")
             shutil.rmtree(input_path)
