@@ -1,7 +1,7 @@
 # markdown_processor.py
 
 import os
-from typing import Dict
+from typing import Dict, Union
 
 class MarkdownProcessor:
     """
