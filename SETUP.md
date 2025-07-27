@@ -34,7 +34,7 @@ export LANGSMITH_TRACING="true"
 export LANGSMITH_API_KEY="..."
 ```
 
-### Install the Cmponents
+### Install the Components
 #### Install the Chat model to be used
 1. We use the chat model to give the Context Message from the Vector DB and the User Message and get back a proper human readable Natural Language Response.
 2. In this Project we are using the Mistral AI Embedding model.
@@ -58,4 +58,26 @@ pip install sentence-transformers
 ## Based on the Processor you have install one of the below
 pip install faiss-gpu # If you have any NVidia CUDA Supported gpu
 pip install faiss-cpu # If there is not CUDA Supported GPU
+```
+
+#### Install StreamLit
+* We are using strealit for the user interface so we need to install that package as well
+
+```bash
+pip install streamlit
+```
+
+### Command Line executions
+
+* Inorder to run the toll form the command line use the following commands
+```bash
+python main_pipeline.py --input_path ./test-data --k 10
+# input path is the test data path
+# K is the query return size.
+```
+
+### Starting up the the Stream Lit UI
+In order to start up the UI in your local we need to execute the command
+```bash
+streamlit run user_interface/ui_components.py
 ```
