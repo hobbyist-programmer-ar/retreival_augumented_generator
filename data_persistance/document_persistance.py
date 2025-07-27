@@ -47,86 +47,45 @@ class VectorStoreManager:
     def _clean_markdown_text(self, text: str) -> str:
         """
         Removes common markdown syntax from a string to prepare it for embedding.
-
-        Args:
-            text: The raw markdown text.
-
-        Returns:
-            The cleaned text.
         """
-        # Remove links, keeping the link text: [text](url) -> text
         text = re.sub(r'\[(.*?)\]\(.*?\)', r'\1', text)
-        # Remove image tags, keeping the alt text: ![alt](src) -> alt
         text = re.sub(r'!\[(.*?)\]\(.*?\)', r'\1', text)
-        # Remove bold/italics: **text** or *text* -> text
         text = re.sub(r'(\*\*|__|\*|_)(.*?)\1', r'\2', text)
-        # Remove inline code backticks: `code` -> code
         text = re.sub(r'`(.*?)`', r'\1', text)
-        # Remove list markers (at the beginning of a line)
         text = re.sub(r'^\s*[\*\-\+]\s+', '', text, flags=re.MULTILINE)
-        # Remove blockquotes
         text = re.sub(r'^\s*>\s?', '', text, flags=re.MULTILINE)
-        # Remove horizontal rules
         text = re.sub(r'^\s*[-*_]{3,}\s*$', '', text, flags=re.MULTILINE)
-
         return text.strip()
 
     def _parse_markdown_to_documents(self, markdown_data: Dict[str, str]) -> List[Document]:
         """
-        Parses a dictionary of markdown content into a list of LangChain Documents.
-        The content is cleaned of markdown syntax before being stored.
-
-        Args:
-            markdown_data: A dictionary with filename as key and markdown content as value.
-
-        Returns:
-            A list of LangChain Document objects ready for embedding.
+        Parses and cleans markdown content into a list of LangChain Documents.
         """
         all_documents = []
-
         for file_name, content in markdown_data.items():
             if not content.strip():
-                continue # Skip empty files
-
+                continue
             page_title_match = re.search(r'^#\s+(.*)', content, re.MULTILINE)
-            page_title = page_title_match.group(1).strip() if page_title_match else file_name
-
+            page_title = self._clean_markdown_text(page_title_match.group(1)) if page_title_match else file_name
             sections = re.split(r'(^#+\s+.*)', content, flags=re.MULTILINE)
-
             if sections[0].strip():
                 cleaned_intro = self._clean_markdown_text(sections[0].strip())
                 chunks = self.text_splitter.split_text(cleaned_intro)
                 for chunk in chunks:
-                    metadata = {
-                        "section_name": "Introduction",
-                        "page_title": page_title,
-                        "file_name": file_name,
-                        "source": "Markdown File"
-                    }
+                    metadata = {"section_name": "Introduction", "page_title": page_title, "file_name": file_name, "source": "Markdown File"}
                     all_documents.append(Document(page_content=chunk, metadata=metadata))
-
             for i in range(1, len(sections), 2):
                 if i + 1 < len(sections):
                     header = sections[i].strip()
                     body = sections[i+1].strip()
-
                     section_name = self._clean_markdown_text(header.lstrip('#').strip())
                     cleaned_body = self._clean_markdown_text(body)
-
                     if not cleaned_body:
                         continue
-
                     chunks = self.text_splitter.split_text(cleaned_body)
-
                     for chunk in chunks:
-                        metadata = {
-                            "section_name": section_name,
-                            "page_title": page_title,
-                            "file_name": file_name,
-                            "source": "Markdown File"
-                        }
+                        metadata = {"section_name": section_name, "page_title": page_title, "file_name": file_name, "source": "Markdown File"}
                         all_documents.append(Document(page_content=chunk, metadata=metadata))
-
         return all_documents
 
     def build_vector_store_from_dict(self, markdown_data: Dict[str, str]) -> FAISS:
@@ -136,7 +95,6 @@ class VectorStoreManager:
         documents = self._parse_markdown_to_documents(markdown_data)
         if not documents:
             raise ValueError("No documents were created from the provided markdown data. Check the content.")
-
         print(f"Creating vector store with {len(documents)} document chunks.")
         self.vector_store = FAISS.from_documents(documents, self.embeddings)
         return self.vector_store
@@ -155,46 +113,50 @@ class VectorStoreManager:
         """
         if not self.vector_store:
             raise ValueError("Vector store has not been built. Call a build method first.")
-
         docstore = self.vector_store.docstore._dict
-
         human_readable_docs = []
         for doc_id, document in docstore.items():
-            human_readable_docs.append({
-                "content": document.page_content,
-                "metadata": document.metadata
-            })
+            human_readable_docs.append({"content": document.page_content, "metadata": document.metadata})
         return human_readable_docs
+
+    def query_vector_store(self, query: str, k: int = 4) -> List[Document]:
+        """
+        Performs a similarity search on the vector store.
+
+        Args:
+            query (str): The question or text to search for.
+            k (int): The number of top results to return.
+
+        Returns:
+            A list of LangChain Document objects that are most relevant to the query.
+
+        Raises:
+            ValueError: If the vector store has not been built yet.
+        """
+        if not self.vector_store:
+            raise ValueError("Vector store has not been built. Call 'build_vector_store' first.")
+
+        # The similarity_search method returns a list of documents and their scores
+        results = self.vector_store.similarity_search(query, k=k)
+        return results
 
 # This block allows the script to be executed directly from the command line.
 if __name__ == '__main__':
-    # --- 1. Setup Command-Line Argument Parser ---
-    parser = argparse.ArgumentParser(
-        description="Process markdown files from a directory and store them in a FAISS vector DB."
-    )
-    parser.add_argument(
-        '--path',
-        type=str,
-        help="The path to the directory containing markdown files. If not provided, you will be prompted to enter it.",
-        default=None
-    )
+    parser = argparse.ArgumentParser(description="Process markdown files and store them in a FAISS vector DB.")
+    parser.add_argument('--path', type=str, help="Path to the directory with markdown files. If not provided, you will be prompted.", default=None)
     args = parser.parse_args()
 
     input_path = args.path
     is_demo = False
 
-    # --- 2. Prompt for path if not provided via arguments ---
     if not input_path:
         print("No directory path provided via command-line argument.")
         try:
-            # Prompt the user to enter the path interactively
             input_path = input("Please enter the path to your markdown directory (or press Enter for a demo): ")
         except KeyboardInterrupt:
             print("\nOperation cancelled by user. Exiting.")
             sys.exit()
 
-    # --- 3. Handle Demo Mode ---
-    # If the user provided no path via argument OR prompt, run the demo.
     if not input_path:
         print("\nNo path entered. Creating and running a temporary demo...")
         is_demo = True
@@ -202,38 +164,49 @@ if __name__ == '__main__':
         if os.path.exists(input_path):
             shutil.rmtree(input_path)
         os.makedirs(input_path)
-
-        # Create dummy files for demonstration
         with open(os.path.join(input_path, 'rag_overview.md'), 'w') as f:
-            f.write(
-                "# All About RAG\n\nThis document explains the concept of **Retrieval Augmented Generation**.\n\n"
-                "## Core Idea\n\nThe core idea is to retrieve relevant documents from a `knowledge base` and provide them as context to a large language model (LLM) to generate a response. This improves [accuracy](http://example.com) and reduces hallucinations."
-            )
+            f.write("# All About RAG\n\nThis document explains Retrieval Augmented Generation.\n\n## Core Idea\n\nThe core idea is to retrieve relevant documents from a knowledge base and provide them as context to a large language model (LLM) to generate a response. This improves accuracy and reduces hallucinations.")
         with open(os.path.join(input_path, 'setup_guide.md'), 'w') as f:
-            f.write(
-                "# System Setup\n\nFollow these steps to set up the environment.\n\n"
-                "### Python\n\n* Install Python 3.9 or higher.\n\n"
-                "### Dependencies\n\n> Run `pip install -r requirements.txt`."
-            )
+            f.write("# System Setup\n\nFollow these steps.\n\n### Python\n\n* Install Python 3.9+.\n\n### Dependencies\n\n> Run `pip install -r requirements.txt`.")
         print(f"Demo files created in '{input_path}/'")
 
-    # --- 4. Run the Processing ---
     try:
         manager = VectorStoreManager()
         print(f"\nProcessing files from: {os.path.abspath(input_path)}")
         manager.process_directory_and_build_store(input_path)
+        print("\n--- Vector Store Built Successfully ---")
 
-        print("\n--- Documents in Vector Store (Cleaned Content) ---")
-        all_docs = manager.get_all_documents_in_store()
+        # --- Interactive Query Loop ---
+        print("\nYou can now ask questions about the documents. Type 'exit' to quit.")
+        while True:
+            try:
+                user_query = input("Query> ")
+                if user_query.lower() == 'exit':
+                    break
+                if not user_query:
+                    continue
 
-        print(json.dumps(all_docs, indent=2))
-        print("\nProcessing complete.")
+                # Perform the query
+                results = manager.query_vector_store(user_query, k=5)
+
+                print("\n--- Top Results ---")
+                if not results:
+                    print("No relevant documents found.")
+                else:
+                    for i, doc in enumerate(results):
+                        print(f"Result {i+1}:")
+                        print(f"  Content: {doc.page_content}")
+                        print(f"  Metadata: {doc.metadata}\n")
+                print("-" * 20)
+
+            except KeyboardInterrupt:
+                print("\nExiting query loop.")
+                break
 
     except (FileNotFoundError, NotADirectoryError, ValueError) as e:
         print(f"\nAn error occurred: {e}")
         print("Please ensure the path is a valid directory containing markdown files.")
     finally:
-        # --- 5. Clean up the demo directory ---
         if is_demo and os.path.exists(input_path):
             print(f"\nCleaning up demo directory: {input_path}")
             shutil.rmtree(input_path)
