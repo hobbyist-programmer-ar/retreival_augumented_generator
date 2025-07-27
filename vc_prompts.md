@@ -53,3 +53,59 @@ The Document Metadata should contain the the following data
 3. The File name should be document_persistance.py
 4. It should be made an an importable module for other classes.
 5. There should be a get method which should allow me to print the documents stored in the vector database in a human readable format
+
+### Searching and Summarization
+1. We need to search the document, that has been populated earlier, based on the user query.
+2. For each document we need to get the metadata along with the actual content.
+3. We will need to get the complete sections from the database even if a section is split in to 2 or more chunks.
+4. This content should be in the following format
+```json
+{
+	section_name: content
+}
+```
+5. This will be used as a context along with the user query to the chat model for the humanized version of chat. But the scope of this should only be about retrieving the relevant document.
+6. If there is no data in the database it should send a message saying no data found to create the context.
+
+#### Explanation of Input
+1. The input is a user query and based on the User query.
+2. For the test purpose we can make it in such a way that the input is given via command line.
+
+#### Explanation of output.
+The output should be an object like below.
+```json
+{
+	section_name: content
+}
+
+```
+The output of the program should also contain the metadata of the document stored.
+It should have an variable to get the top k result
+The output should be printed on the screen.
+
+#### Non Functional Requirement
+1. Provide the detailed documentation for all the methods written here.
+2. Instead of getting the data from the vector DB and parsing it in the local we need to send a query to the database to get the output for a specific .
+3. There should be unit test cases for the same as well
+
+
+### User Interface
+
+1. Create a simple Chat UI using Streamlit.
+2. The Interface should have two modes basically an admin mode and a chat mode.
+##### Admin Mode
+1. The admin mode should give you the ability to to add input documents paths.
+2. The Admin mode should give you an raw query interface which should interact with the Vector DB and give a raw query.
+	1. The Query should contain the user search and the document list size to be returned.
+3. The Admin role should be password protected for now the user id should be "admin" and password should be "1234".
+4. When I give the path to the test document it should be loaded into the vector data base by reusing the MarkdownProcessor and the VectorStoreManager classes.
+5. The query should be executed with the help of the SearchProcessor class
+
+##### User Mode
+1. For now create a simple minimalist themed interface where only a search bar is provided.
+2. The implementations for this interface will be given later on.
+
+#### Non Functional Requirement
+* The chat theme should have both a light and dark mode.
+* It should have a pleasant minimalist circuit design but it should be very subtle
+* All of this should be created in s separate package called user_interface and the class name should be ui_components.py
